@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Se recarga automáticamente cada 3 segundos para detectar cuando el cajero apruebe -->
+    <meta http-equiv="refresh" content="3">
+    <title>Esperando Aprobación - Movitek</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="brand-header">Tecnología <span>Movitek</span></div>
+        <h2>⏳ Esperando Confirmación</h2>
+        <p>Por favor, acércate a caja para realizar el pago de tu pedido <b>{{ pedido.id }}</b>.</p>
+        
+        <div class="spinner">🔄</div>
+        <p style="font-size: 0.85rem; color: #888;">Esta pantalla se actualizará sola al aprobarse el pago.</p>
+    </div>
+
+    <script>
+        window.addEventListener("pageshow", function (event) {
+            if (event.persisted || (performance.navigation && performance.navigation.type === 2)) {
+                window.location.reload(true);
+            }
+        });
+    </script>
+</body>
+</html>

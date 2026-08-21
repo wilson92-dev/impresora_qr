@@ -1,0 +1,198 @@
+:root {
+    --movitek-blue: #16325c;
+    --movitek-orange: #f27121;
+    --movitek-orange-hover: #d65d00;
+    --bg-color: #f0f4f8;
+    --card-bg: #ffffff;
+    --text-main: #2c3e50;
+    --text-muted: #7f8c8d;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    background-color: var(--card-bg);
+    width: 100%;
+    max-width: 450px;
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 12px 30px rgba(22, 50, 92, 0.12);
+    text-align: center;
+    border-top: 8px solid var(--movitek-orange);
+    position: relative;
+}
+
+/* Marca Movitek */
+.brand-header {
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: var(--movitek-blue);
+    text-transform: uppercase;
+    letter-spacing: 2.5px;
+    margin-bottom: 8px;
+}
+
+.brand-header span {
+    color: var(--movitek-orange);
+}
+
+h1 {
+    color: var(--movitek-blue);
+    font-size: 1.8rem;
+    font-weight: 800;
+    margin-bottom: 5px;
+}
+
+h2 {
+    color: var(--movitek-blue);
+    font-size: 1.4rem;
+    margin-bottom: 15px;
+}
+
+p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    margin-bottom: 20px;
+}
+
+/* Caja de carga de archivos (Upload Box) */
+.upload-box {
+    border: 2px dashed #b0c4de;
+    background-color: #fafbfc;
+    padding: 25px 15px;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-bottom: 20px;
+}
+
+.upload-box:hover {
+    border-color: var(--movitek-orange);
+    background-color: #fffaf5;
+}
+
+.upload-box label {
+    color: var(--movitek-blue);
+    font-weight: 600;
+    cursor: pointer;
+    display: block;
+    font-size: 1rem;
+}
+
+.upload-box small {
+    display: block;
+    color: var(--text-muted);
+    margin-top: 6px;
+    font-size: 0.85rem;
+}
+
+/* Opciones (Select y Inputs) */
+.options {
+    text-align: left;
+    margin-bottom: 20px;
+}
+
+.options label {
+    font-weight: 600;
+    color: var(--movitek-blue);
+    font-size: 0.9rem;
+    display: block;
+    margin-bottom: 6px;
+}
+
+.options select, .options input[type="number"] {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e1e8ed;
+    border-radius: 10px;
+    font-size: 1rem;
+    color: var(--text-main);
+    background-color: #fff;
+    margin-bottom: 15px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.options select:focus, .options input:focus {
+    border-color: var(--movitek-orange);
+}
+
+/* Botones principales estilo Movitek */
+.btn-primary, .btn-qr, .btn-efectivo, button[type="submit"] {
+    background-color: var(--movitek-orange);
+    color: #ffffff;
+    border: none;
+    width: 100%;
+    padding: 14px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    box-shadow: 0 4px 12px rgba(242, 113, 33, 0.3);
+    text-decoration: none;
+    display: inline-block;
+    margin-top: 10px;
+}
+
+.btn-primary:hover, .btn-qr:hover, .btn-efectivo:hover, button[type="submit"]:hover {
+    background-color: var(--movitek-orange-hover);
+}
+
+.btn-efectivo {
+    background-color: var(--movitek-blue);
+    box-shadow: 0 4px 12px rgba(22, 50, 92, 0.3);
+}
+
+.btn-efectivo:hover {
+    background-color: #0d1e38;
+}
+
+/* Spinner y Alertas */
+.spinner {
+    font-size: 2.5rem;
+    animation: spin 1.5s linear infinite;
+    margin: 20px 0;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Panel de Administración */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    background: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+th, td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #e1e8ed;
+    font-size: 0.9rem;
+}
+
+th {
+    background-color: var(--movitek-blue);
+    color: white;
+}

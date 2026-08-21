@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Panel de Administración - Movitek</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        :root{
+            --movitek-blue:#0d6efd;
+            --muted:#6c757d;
+            --bg:#f5f7fb;
+            --card:#fff;
+            --success:#28a745;
+            --danger:#dc3545;
+            --warning:#ffc107;
+            --shadow: 0 2px 10px rgba(0,0,0,0.06);
+        }
+        html,body{height:100%}
+        body{font-family:system-ui, -apple-system, "Segoe UI", Roboto, Arial; background:var(--bg); margin:0; color:#222;}
+        .container{max-width:980px;margin:18px auto;padding:12px;}
+        .brand-header{font-weight:700;color:var(--movitek-blue);font-size:1.05rem;margin-bottom:6px;}
+        h1{margin:6px 0 12px 0;font-size:1.25rem;}
+        .controls{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
+        .btn {
+            border:0;padding:9px 12px;border-radius:8px;cursor:pointer;font-weight:600;
+            display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:white;
+            box-shadow:var(--shadow);
+        }
+        .btn-small{padding:8px 10px;font-size:0.95rem;border-radius:7px;}
+        .btn-warning{background:var(--warning);color:#111;}
+        .btn-danger{background:var(--danger);}
+        .btn-neutral{background:#6c757d;}
+        .card{background:var(--card);border-radius:10px;padding:12px;box-shadow:var(--shadow);}
+        table{width:100%;border-collapse:collapse;margin-top:10px;font-size:0.95rem;}
+        th,td{padding:10px;border-bottom:1px solid #eee;text-align:left;vertical-align:middle;}
+        th{background:transparent;color:#333;font-weight:700;}
+        tr:nth-child(even){background:#fbfcfe;}
+        .meta{font-size:0.9rem;color:var(--muted);}
+        .actions-inline form{display:inline-block;margin:0;}
+        .small-btn{padding:6px 8px;border-radius:6px;border:0;cursor:pointer;color:white;font-weight:600}
+        .approve{background:var(--success);}
+        .reject{background:#6c757d;}
+        .state-pill{display:inline-block;padding:6px 8px;border-radius:999px;font-size:0.85rem;background:#f1f1f1;color:#333}
+        .estado-efectivo{background:linear-gradient(90deg, rgba(232,245,233,0.6), transparent);}
+        .estado-qr{background:linear-gradient(90deg, rgba(227,242,253,0.6), transparent);}
+        /* Overlay processing */
+        #overlay {
+            position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.35);z-index:9999;
+        }
+        .overlay-box{background:#fff;padding:18px 22px;border-radius:10px;display:flex;gap:12px;align-items:center;box-shadow:var(--shadow);}
+        .spinner{width:28px;height:28px;border-radius:50%;border:4px solid #eee;border-top-color:var(--movitek-blue);animation:spin 1s linear infinite;}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        /* Responsive */
+        @media (max-width:800px){
+            th,td{padding:8px;font-size:0.9rem;}
+            .controls{flex-direction:column;align-items:flex-start;}
+            table, thead, tbody, th, td, tr { display:block; }
+            thead { display:none; }
+            tr { margin-bottom:12px; border:1px solid #eee; padding:10px; border-radius:8px; background:#fff; }
+            td { display:flex; justify-content:space-between; padding:8px 6px; }
+            td[data-label]:before { content: attr(data-label); font-weight:700; margin-right:8px; color:#444; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="brand-header">Panel de Control <span style="font-weight:600">Movitek</span></div>
+        <h1>Administración</h1>
+        <p class="meta">Gestión de pedidos en tiempo real. Usa los botones con precaución: reiniciar o limpiar cola puede interrumpir impresiones en curso.</p>
+
+        <div class="controls">
+            <button id="btn-restart" data-prevent-double="true" class="btn btn-small btn-warning" onclick="confirmAction('reiniciar')">🔄 Reiniciar Impresora</button>
+            <button id="btn-clear" data-prevent-double="true" class="btn btn-small btn-danger" onclick="confirmAction('limpiar')">🧹 Limpiar Cola</button>
+            <a href="{{ url_for('index') }}" class="btn btn-small btn-neutral" style="background:#343a40;">🏠 Volver</a>
+        </div>
+
+        <div class="card">
+            <h3 style="margin:0 0 8px 0;color:var(--movitek-blue)">📦 Pedidos Pendientes</h3>
+
+            {% if not pendientes %}
+                <p class="meta" style="margin-top:12px;">No hay pedidos pendientes en este momento.</p>
+            {% else %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width:12%;">ID</th>
+                            <th style="width:28%;">Archivo</th>
+                            <th style="width:22%;">Detalles</th>
+                            <th style="width:12%;">Total</th>
+                            <th style="width:12%;">Pago</th>
+                            <th style="width:14%;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in pendientes %}
+                        <tr class="estado-{{ p.metodo_pago }}">
+                            <td data-label="ID"><b style="font-family:monospace;">{{ p.id[:8] }}</b></td>
+                            <td data-label="Archivo">
+                                <div>{{ p.original_name }}</div>
+                                <div class="meta">Guardado: {{ p.saved_name }}</div>
+                            </td>
+                            <td data-label="Detalles">
+                                <div>{{ p.paginas }} pág(s) • {{ p.copias }} copias</div>
+                                <div class="meta">{{ p.modo.upper() }} • Estado: <span class="state-pill">{{ p.estado }}</span></div>
+                            </td>
+                            <td data-label="Total"><b>Bs. {{ p.total }}</b></td>
+                            <td data-label="Pago">{{ p.metodo_pago|default('N/A')|capitalize }}</td>
+                            <td data-label="Acciones" class="actions-inline">
+                                <form action="{{ url_for('aprobar_pedido', pedido_id=p.id) }}" method="POST" onsubmit="return submitAction(this, 'Aprobando pedido...')">
+                                    <button type="submit" class="small-btn approve">✅ Aprobar</button>
+                                </form>
+                                <form action="{{ url_for('rechazar_pedido', pedido_id=p.id) }}" method="POST" onsubmit="return submitAction(this, 'Rechazando pedido...')" style="margin-left:6px;">
+                                    <button type="submit" class="small-btn reject">❌ Rechazar</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Overlay -->
+    <div id="overlay" aria-hidden="true">
+        <div class="overlay-box" role="status" aria-live="polite">
+            <div class="spinner" aria-hidden="true"></div>
+            <div>
+                <div style="font-weight:700;" id="overlay-title">Procesando...</div>
+                <div class="meta" id="overlay-sub">Por favor espera, esto puede tardar unos segundos.</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mostrar overlay global
+        function showOverlay(title, subtitle){
+            document.getElementById('overlay-title').textContent = title || 'Procesando...';
+            document.getElementById('overlay-sub').textContent = subtitle || 'Por favor espera, esto puede tardar unos segundos.';
+            document.getElementById('overlay').style.display = 'flex';
+        }
+        function hideOverlay(){
+            document.getElementById('overlay').style.display = 'none';
+        }
+
+        // Confirmación para acciones críticas (reiniciar / limpiar)
+        function confirmAction(type){
+            let msg = '';
+            let endpoint = '';
+            if(type === 'reiniciar'){
+                msg = 'Vas a reiniciar CUPS y la impresora. Esto puede interrumpir impresiones en curso. ¿Continuar?';
+                endpoint = "{{ url_for('reiniciar_cups') }}";
+            } else if(type === 'limpiar'){
+                msg = 'Vas a limpiar toda la cola de la impresora. Los trabajos en curso se cancelarán. ¿Continuar?';
+                endpoint = "{{ url_for('limpiar_cola') }}";
+            } else {
+                return;
+            }
+
+            if(!confirm(msg)) return;
+
+            // Deshabilitar botones para evitar spam
+            document.getElementById('btn-restart').disabled = true;
+            document.getElementById('btn-clear').disabled = true;
+            showOverlay('Ejecutando acción...', 'Esperando respuesta del sistema.');
+
+            // Ejecutar la acción en el servidor (GET) y volver al panel
+            fetch(endpoint, { method: 'GET', credentials: 'same-origin' })
+                .then(resp => {
+                    window.location.href = "{{ url_for('admin') }}";
+                })
+                .catch(err => {
+                    alert('Error al ejecutar la acción: ' + err);
+                    hideOverlay();
+                    document.getElementById('btn-restart').disabled = false;
+                    document.getElementById('btn-clear').disabled = false;
+                });
+        }
+
+        // Maneja envíos de formularios de aprobar/rechazar
+        function submitAction(form, overlayText){
+            const btn = form.querySelector('button');
+            if(btn) btn.disabled = true;
+            showOverlay(overlayText || 'Procesando...');
+            return true; // permitir envío normal
+        }
+
+        /* --- Previene retroceso (back) en Android/Chrome navegadores móviles --- */
+        (function() {
+          function blockBack() {
+            try {
+              history.pushState(null, null, location.href);
+              window.addEventListener('popstate', onPopState);
+            } catch (e) { console.warn('blockBack error', e); }
+          }
+          function onPopState(e) {
+            history.pushState(null, null, location.href);
+            showTemporaryOverlay('Acción no permitida', 'Usa los botones de la interfaz para navegar.');
+          }
+          function showTemporaryOverlay(title, subtitle, ms = 1400) {
+            let ov = document.getElementById('anti-back-overlay-temp');
+            if (!ov) {
+              ov = document.createElement('div');
+              ov.id = 'anti-back-overlay-temp';
+              ov.style.position = 'fixed';
+              ov.style.left = '50%';
+              ov.style.top = '12%';
+              ov.style.transform = 'translateX(-50%)';
+              ov.style.background = 'rgba(0,0,0,0.75)';
+              ov.style.color = '#fff';
+              ov.style.padding = '10px 14px';
+              ov.style.borderRadius = '8px';
+              ov.style.zIndex = 99999;
+              ov.style.fontFamily = 'system-ui, Arial, sans-serif';
+              ov.style.fontSize = '0.95rem';
+              ov.style.boxShadow = '0 4px 14px rgba(0,0,0,0.25)';
+              document.body.appendChild(ov);
+            }
+            ov.textContent = title + (subtitle ? ' — ' + subtitle : '');
+            ov.style.opacity = '1';
+            ov.style.display = 'block';
+            clearTimeout(ov._t);
+            ov._t = setTimeout(() => {
+              ov.style.transition = 'opacity 300ms';
+              ov.style.opacity = '0';
+              setTimeout(() => { ov.style.display = 'none'; ov.style.transition = ''; }, 350);
+            }, ms);
+          }
+
+          function preventDoubleSubmit() {
+            document.addEventListener('submit', function(e) {
+              const form = e.target;
+              if (form && form.tagName === 'FORM' && form.dataset.allowMulti !== 'true') {
+                const btn = form.querySelector('button[type="submit"], input[type="submit"]');
+                if (btn) { btn.disabled = true; btn.classList && btn.classList.add('disabled'); }
+                showOverlay('Procesando...', 'Por favor espera.');
+              }
+            }, true);
+
+            document.addEventListener('click', function(e) {
+              const btn = e.target.closest('button, a');
+              if (!btn) return;
+              if (btn.dataset.preventDouble === 'true') {
+                if (btn._clicked) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  return false;
+                }
+                btn._clicked = true;
+                setTimeout(() => { btn._clicked = false; }, 1500);
+              }
+            }, true);
+          }
+
+          function preventDoubleTapZoom() {
+            let lastTouch = 0;
+            document.addEventListener('touchend', function(e) {
+              const now = Date.now();
+              if (now - lastTouch <= 300) { e.preventDefault(); }
+              lastTouch = now;
+            }, { passive: false });
+          }
+
+          document.addEventListener('DOMContentLoaded', function() {
+            blockBack();
+            preventDoubleSubmit();
+            preventDoubleTapZoom();
+          });
+
+          window.addEventListener('pageshow', function(event) {
+            if (event.persisted) { blockBack(); }
+          });
+        })();
+    </script>
+</body>
+</html>
+

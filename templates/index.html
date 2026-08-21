@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Imprime Ya! - Sistema de Impresión</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --accent: #f97316; /* El naranja del antifas del robot */
+            --bg-color: #f4f6f9;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            font-family: system-ui, -apple-system, sans-serif;
+            color: var(--text-main);
+            margin: 0;
+            padding: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .main-container {
+            width: 100%;
+            max-width: 480px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Robot Mascota */
+        .robot-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .robot-head {
+            width: 80px; height: 80px; background-color: var(--primary); border-radius: 50%;
+            position: relative; display: flex; justify-content: center; align-items: center;
+            box-shadow: inset -4px -4px 0px rgba(0, 0, 0, 0.2), 0 4px 10px rgba(37, 99, 235, 0.2);
+        }
+        .robot-head::before {
+            content: ''; position: absolute; top: 0; width: 4px; height: 12px;
+            background-color: #154360; border-radius: 0 0 4px 4px;
+        }
+        .robot-visor {
+            width: 60px; height: 26px; background-color: var(--accent); border-radius: 13px;
+            display: flex; justify-content: space-around; align-items: center; padding: 0 4px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.15);
+        }
+        .eye { width: 8px; height: 10px; background-color: var(--primary); border-radius: 50%; }
+        .robot-smile {
+            position: absolute; bottom: 12px; width: 22px; height: 8px;
+            border-bottom: 3px solid var(--accent); border-radius: 50%;
+        }
+        .robot-body {
+            width: 60px; height: 45px; background-color: var(--primary);
+            border-radius: 12px 12px 6px 6px; margin-top: -5px; display: flex;
+            justify-content: center; align-items: center; box-shadow: inset -3px -3px 0px rgba(0, 0, 0, 0.2);
+        }
+        .robot-symbol { font-size: 22px; color: var(--accent); font-weight: bold; }
+        .robot-base { width: 75px; height: 8px; background-color: var(--accent); border-radius: 4px; margin-top: 2px; }
+
+        /* Tarjeta principal */
+        .card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 22px;
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+            width: 100%;
+            border: 1px solid var(--border);
+            box-sizing: border-box;
+        }
+
+        .brand-title { text-align: center; margin-bottom: 18px; }
+        .brand-title h1 { margin: 0; font-size: 1.7rem; font-weight: 800; letter-spacing: -1px; }
+        .brand-title p { margin: 4px 0 0; font-size: 0.85rem; color: var(--text-muted); }
+
+        .form-group { margin-bottom: 16px; }
+        .form-group label {
+            display: block; font-size: 0.85rem; font-weight: 700;
+            margin-bottom: 6px; color: var(--text-main);
+        }
+        .form-control {
+            width: 100%; padding: 12px; border: 1px solid var(--border);
+            border-radius: 10px; background: #f8fafc; box-sizing: border-box; font-size: 0.95rem;
+        }
+
+        /* --- BOTÓN DE ARCHIVO ESTILIZADO (Naranja tipo Antifas) --- */
+        .file-upload-wrapper {
+            position: relative;
+            width: 100%;
+        }
+        .file-upload-input {
+            display: none; /* Oculta el input feo original */
+        }
+        .file-upload-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            background: linear-gradient(135deg, var(--accent) 0%, #ea580c 100%);
+            color: white;
+            padding: 14px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 0.95rem;
+            box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+            transition: all 0.2s ease;
+            box-sizing: border-box;
+            text-align: center;
+        }
+        .file-upload-btn:hover {
+            opacity: 0.95;
+            transform: translateY(-1px);
+        }
+        .file-name-display {
+            margin-top: 6px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-align: center;
+            word-break: break-all;
+        }
+
+        /* --- BOTONES DE MODO DE IMPRESIÓN --- */
+        .modo-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .modo-option {
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 12px 10px;
+            text-align: center;
+            cursor: pointer;
+            background: #f8fafc;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+        .modo-option input[type="radio"] { display: none; }
+        .modo-option i { font-size: 1.2rem; }
+        .modo-option span { font-size: 0.85rem; font-weight: 700; color: var(--text-main); }
+        
+        .modo-option.selected {
+            border-color: var(--primary);
+            background: #eff6ff;
+        }
+        .modo-option.selected span { color: var(--primary); }
+
+        /* Botón de envío final */
+        .btn-submit {
+            width: 100%; background: var(--primary); color: white; border: none;
+            padding: 14px; border-radius: 12px; cursor: pointer; font-weight: 700;
+            font-size: 1rem; display: flex; align-items: center; justify-content: center;
+            gap: 8px; transition: background 0.2s; margin-top: 10px;
+            box-shadow: 0 2px 6px rgba(37,99,235,0.2);
+        }
+        .btn-submit:hover { background: #1d4ed8; }
+    </style>
+</head>
+<body>
+
+    <div class="main-container">
+        <!-- Robot Mascota -->
+        <div class="robot-container">
+            <div class="robot-head">
+                <div class="robot-visor">
+                    <div class="eye"></div>
+                    <div class="eye"></div>
+                </div>
+                <div class="robot-smile"></div>
+            </div>
+            <div class="robot-body">
+                <div class="robot-symbol">🖨️</div>
+            </div>
+            <div class="robot-base"></div>
+        </div>
+
+        <!-- Tarjeta del Sistema -->
+        <div class="card">
+            <div class="brand-title">
+                <h1>
+                    <span style="color: var(--primary);">IMPRIME</span>
+                    <span style="color: var(--accent);">YA!</span>
+                </h1>
+                <p>Sistema automatizado respaldado por <strong>Movitek</strong></p>
+            </div>
+
+            <form action="{{ url_for('upload_file') }}" method="POST" enctype="multipart/form-data">
+                
+                <!-- Selector de Archivo Personalizado (Color Antifas) -->
+                <div class="form-group">
+                    <label><i class="fa-solid fa-file-arrow-up"></i> Selecciona tu documento</label>
+                    <div class="file-upload-wrapper">
+                        <label for="archivo-input" class="file-upload-btn">
+                            <i class="fa-solid fa-folder-open"></i> Buscar archivo (PDF, PNG, JPG)
+                        </label>
+                        <input type="file" id="archivo-input" name="archivo" class="file-upload-input" required accept=".pdf,.png,.jpg,.jpeg" onchange="mostrarNombreArchivo(this)">
+                    </div>
+                    <div id="file-name" class="file-name-display">Ningún archivo seleccionado</div>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fa-solid fa-copy"></i> Número de copias</label>
+                    <input type="number" name="copias" class="form-control" value="1" min="1" required>
+                </div>
+
+                <!-- Selector de Modo de Impresión -->
+                <div class="form-group">
+                    <label><i class="fa-solid fa-palette"></i> Modo de Impresión</label>
+                    <div class="modo-grid">
+                        <label class="modo-option selected" id="label-color">
+                            <input type="radio" name="modo" value="color" checked onchange="actualizarSeleccion()">
+                            <i class="fa-solid fa-paintbrush" style="color: #ec4899;"></i>
+                            <span>A Color</span>
+                        </label>
+                        
+                        <label class="modo-option" id="label-gris">
+                            <input type="radio" name="modo" value="gris" onchange="actualizarSeleccion()">
+                            <i class="fa-solid fa-adjust" style="color: var(--text-muted);"></i>
+                            <span>Blanco y Negro</span>
+                        </label>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit">
+                    <i class="fa-solid fa-arrow-right-to-bracket"></i> Continuar al Pago
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Cambiar estilo visual de los botones de modo de impresión
+        function actualizarSeleccion() {
+            const radios = document.getElementsByName('modo');
+            radios.forEach(radio => {
+                const cardLabel = radio.closest('.modo-option');
+                if (radio.checked) {
+                    cardLabel.classList.add('selected');
+                } else {
+                    cardLabel.classList.remove('selected');
+                }
+            });
+        }
+
+        // Mostrar el nombre del archivo seleccionado debajo del botón
+        function mostrarNombreArchivo(input) {
+            const fileNameDisplay = document.getElementById('file-name');
+            if (input.files && input.files[0]) {
+                fileNameDisplay.textContent = "📄 " + input.files[0].name;
+                fileNameDisplay.style.color = "var(--primary)";
+                fileNameDisplay.style.fontWeight = "600";
+            } else {
+                fileNameDisplay.textContent = "Ningún archivo seleccionado";
+                fileNameDisplay.style.color = "var(--text-muted)";
+                fileNameDisplay.style.fontWeight = "normal";
+            }
+        }
+    </script>
+</body>
+</html>

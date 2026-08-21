@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Impresión Exitosa - Movitek</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="brand-header">Tecnología <span>Movitek</span></div>
+        <h1>✅ ¡Imprimiendo!</h1>
+        <p>Tu pago ha sido aprobado. El documento se está imprimiendo en este momento.</p>
+        
+        <a href="/" class="btn-primary" style="margin-top: 25px;">Imprimir otro archivo</a>
+    </div>
+
+    <script>
+        window.addEventListener("pageshow", function (event) {
+            if (event.persisted || (performance.navigation && performance.navigation.type === 2)) {
+                window.location.reload(true);
+            }
+        });
+    </script>
+</body>
+</html>

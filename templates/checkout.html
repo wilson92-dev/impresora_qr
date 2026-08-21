@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Checkout — Imprime Ya!</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --accent: #f97316;
+      --success: #16a34a;
+      --success-dark: #15803d;
+      --bg-color: #f8fafc;
+      --card-bg: #ffffff;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+    }
+    
+    body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg-color); color: var(--text-main); margin: 0; padding: 16px; }
+    .container { max-width: 550px; margin: 0 auto; }
+    
+    /* Branding mejorado */
+    .brand-banner { text-align: center; margin-bottom: 20px; }
+    .brand-banner h2 { margin: 0; font-weight: 800; }
+    .brand-banner p { margin: 4px 0 0; font-size: 0.9rem; color: var(--text-muted); }
+
+    .card { background: var(--card-bg); border-radius: 16px; padding: 20px; box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05); margin-bottom: 16px; border: 1px solid var(--border); }
+    
+    .summary-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 14px; }
+    .file-name { font-weight: 600; font-size: 0.95rem; word-break: break-all; }
+    .badge-id { background: #eff6ff; color: var(--primary); font-size: 0.75rem; padding: 4px 8px; border-radius: 6px; font-weight: 600; }
+
+    .specs-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
+    .spec-box { background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; padding: 10px; text-align: center; }
+    .spec-box .label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; }
+    .spec-box .value { font-size: 1rem; font-weight: 700; color: var(--text-main); margin-top: 2px; }
+
+    .total-box { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-radius: 12px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .total-box .t-label { font-size: 0.9rem; font-weight: 600; color: var(--primary-dark); }
+    .total-box .t-amount { font-size: 1.5rem; font-weight: 800; color: var(--primary-dark); }
+
+    .section-title { font-size: 0.95rem; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+    
+    .btn { width: 100%; border: none; padding: 14px; border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 1rem; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.2s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.08); text-decoration: none; }
+    .btn-efectivo { background: var(--success); color: white; margin-bottom: 10px; }
+    .btn-qr { background: var(--primary); color: white; }
+    .btn-cancel { background: #f1f5f9; color: var(--text-muted); box-shadow: none; margin-top: 10px; }
+
+    .qr-container { display: flex; flex-direction: column; align-items: center; background: #f8fafc; border: 1px dashed var(--border); border-radius: 12px; padding: 16px; margin-top: 14px; }
+    .qr-img { width: 150px; height: 150px; object-fit: contain; border-radius: 8px; background: white; padding: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 10px; }
+    .qr-instructions { font-size: 0.85rem; color: var(--text-muted); text-align: center; line-height: 1.4; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="brand-banner">
+      <h2 style="font-size: 1.8rem; letter-spacing: -1px;">
+        <span style="color: #2563eb;">IMPRIME</span>
+        <span style="color: #f97316;">YA!</span>
+      </h2>
+      <p style="font-weight: 600; color: #64748b;">Respaldado por <strong>Movitek</strong></p>
+    </div>
+
+    <div class="card">
+      <div class="summary-header">
+        <div>
+          <span class="badge-id">ID: {{ pedido.id }}</span>
+          <div class="file-name" style="margin-top:4px;">{{ pedido.original_name }}</div>
+        </div>
+      </div>
+
+      <div class="specs-grid">
+        <div class="spec-box"><div class="label">Páginas</div><div class="value">{{ pedido.paginas }}</div></div>
+        <div class="spec-box"><div class="label">Copias</div><div class="value">{{ pedido.copias }}</div></div>
+        <div class="spec-box"><div class="label">Modo</div><div class="value">{{ pedido.modo.upper() }}</div></div>
+      </div>
+
+      <div class="total-box">
+        <span class="t-label">Total a Pagar</span>
+        <span class="t-amount">Bs. {{ pedido.total }}</span>
+      </div>
+
+      <div class="section-title"><i class="fa-solid fa-wallet"></i> Elige tu método de pago</div>
+
+      <form action="{{ url_for('pagar_efectivo', pedido_id=pedido.id) }}" method="POST">
+        <button class="btn btn-efectivo" type="submit"><i class="fa-solid fa-money-bill-wave"></i> Pagar en Efectivo en Caja</button>
+      </form>
+
+      <form action="{{ url_for('pagar_qr', pedido_id=pedido.id) }}" method="POST">
+        <button class="btn btn-qr" type="submit"><i class="fa-solid fa-qrcode"></i> Ya pagué con QR (Enviar a cola)</button>
+      </form>
+
+      <div class="qr-container">
+        <img src="{{ url_for('static', filename='qr_banco.png') }}" alt="Código QR Banco" class="qr-img" onerror="this.style.display='none'">
+        <div class="qr-instructions">
+          <strong>Instrucciones QR:</strong> Escanea el código, transfiere <strong>Bs. {{ pedido.total }}</strong> y haz clic en el botón azul.
+        </div>
+      </div>
+
+      <a href="{{ url_for('index') }}" class="btn btn-cancel"><i class="fa-solid fa-arrow-left"></i> Cancelar y volver</a>
+    </div>
+  </div>
+</body>
+</html>
