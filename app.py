@@ -136,11 +136,11 @@ def index():
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
-    if 'file' not in request.files:
+    if 'archivo' not in request.files:
         flash("No se encontró archivo en la solicitud.")
         return redirect(url_for('index'))
 
-    file = request.files['file']
+    file = request.files['archivo']
     if file.filename == '':
         flash("No seleccionaste ningún archivo.")
         return redirect(url_for('index'))
