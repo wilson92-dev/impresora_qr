@@ -164,10 +164,10 @@ def upload_file():
         except Exception as e:
             flash(f"Error guardando archivo: {e}")
             return redirect(url_for('index'))
-
         paginas = contar_paginas(filepath)
-        precio_unitario = PRECIO_HOJA_GRAFICO if modo == 'gris' else PRECIO_HOJA_COLOR
+        precio_unitario = PRECIO_HOJA_BN if modo == 'gris' else PRECIO_HOJA_COLOR
         total = paginas * copias * precio_unitario
+        
 
         nuevo_pedido = Pedido(
             id=pedido_id,
@@ -241,9 +241,12 @@ def aprobar_pedido(pedido_id):
     if pedido.estado == 'esperando_aprobacion':
         pedido.estado = 'aprobado_caja'
         db.session.commit()
+        
+        # <-- AGREGAR ESTA LÍNEA AQUÍ PARA QUE IMPRIMA DE INMEDIATO -->
+        cola_impresion.put(pedido.id)
+        
         flash(f'Pedido {pedido_id} aprobado e imprimiendo.')
     return redirect(url_for('admin'))
-
 @app.route('/admin/rechazar/<pedido_id>', methods=['POST'])
 def rechazar_pedido(pedido_id):
     pedido = Pedido.query.get_or_404(pedido_id)
