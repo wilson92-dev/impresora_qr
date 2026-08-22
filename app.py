@@ -35,7 +35,7 @@ class Pedido(db.Model):
     saved_name = db.Column(db.String(200), nullable=False)
     paginas = db.Column(db.Integer, nullable=False)
     copias = db.Column(db.Integer, nullable=False)
-    modo = db.Column(db.String(10), nullable=False)  # 'bn' o 'color'
+    modo = db.Column(db.String(10), nullable=False)  # 'gris' o 'color'
     total = db.Column(db.Integer, nullable=False)
     estado = db.Column(db.String(50), nullable=False, default='pendiente_pago')
     metodo_pago = db.Column(db.String(20), nullable=True)
@@ -164,10 +164,10 @@ def upload_file():
         except Exception as e:
             flash(f"Error guardando archivo: {e}")
             return redirect(url_for('index'))
+            
         paginas = contar_paginas(filepath)
         precio_unitario = PRECIO_HOJA_BN if modo == 'gris' else PRECIO_HOJA_COLOR
         total = paginas * copias * precio_unitario
-        
 
         nuevo_pedido = Pedido(
             id=pedido_id,
@@ -184,7 +184,7 @@ def upload_file():
 
         return redirect(url_for('checkout', pedido_id=pedido_id))
 
-    flash("Solo se permiten archivos PDF, PNG o JPG. Convierte tu archivo antes de subirlo.")
+    flash("Solo se permiten archivos PDF, PNG o JPG.")
     return redirect(url_for('index'))
 
 @app.route('/checkout/<pedido_id>')
@@ -214,6 +214,7 @@ def pagar_qr(pedido_id):
 @app.route('/espera_caja/<pedido_id>')
 def espera_caja(pedido_id):
     pedido = Pedido.query.get_or_404(pedido_id)
+    # Si el administrador ya aprobó, redirigimos a la pantalla de éxito
     if pedido.estado in ['aprobado_caja', 'en_cola', 'completado']:
         return redirect(url_for('exito', pedido_id=pedido.id))
     return render_template('espera_caja.html', pedido=pedido)
@@ -221,12 +222,6 @@ def espera_caja(pedido_id):
 @app.route('/exito/<pedido_id>')
 def exito(pedido_id):
     pedido = Pedido.query.get_or_404(pedido_id)
-
-    if pedido.estado == 'aprobado_caja':
-        cola_impresion.put(pedido.id)
-        pedido.estado = 'en_cola'
-        db.session.commit()
-
     return render_template('exito.html', pedido=pedido)
 
 # --- RUTAS DE ADMINISTRACIÓN ---
@@ -242,11 +237,12 @@ def aprobar_pedido(pedido_id):
         pedido.estado = 'aprobado_caja'
         db.session.commit()
         
-        # <-- AGREGAR ESTA LÍNEA AQUÍ PARA QUE IMPRIMA DE INMEDIATO -->
+        # Enviar de forma segura a la cola de impresión de la Raspberry Pi una sola vez
         cola_impresion.put(pedido.id)
         
         flash(f'Pedido {pedido_id} aprobado e imprimiendo.')
     return redirect(url_for('admin'))
+
 @app.route('/admin/rechazar/<pedido_id>', methods=['POST'])
 def rechazar_pedido(pedido_id):
     pedido = Pedido.query.get_or_404(pedido_id)
@@ -261,12 +257,8 @@ def reiniciar_cups():
     try:
         subprocess.run(["sudo", "systemctl", "restart", "cups"], check=True, timeout=10)
         flash('CUPS y la impresora han sido reiniciados correctamente.')
-    except subprocess.CalledProcessError as e:
-        flash(f'Error al reiniciar CUPS: {e}')
-    except subprocess.TimeoutExpired:
-        flash('Tiempo de espera agotado al reiniciar CUPS.')
     except Exception as e:
-        flash(f'Aviso al reiniciar CUPS: {e}')
+        flash(f'Error al reiniciar CUPS: {e}')
     return redirect(url_for('admin'))
 
 @app.route('/admin/limpiar_cola')
@@ -274,16 +266,10 @@ def limpiar_cola():
     try:
         subprocess.run(["cancel", "-a", IMPRESORA_NOMBRE], check=True, timeout=5)
         flash('La cola de impresión ha sido limpiada con éxito.')
-    except subprocess.CalledProcessError as e:
-        flash(f'Error al limpiar la cola: {e}')
-    except subprocess.TimeoutExpired:
-        flash('Tiempo de espera agotado al limpiar la cola.')
     except Exception as e:
         flash(f'Error al limpiar la cola: {e}')
     return redirect(url_for('admin'))
 
 # --- EJECUCIÓN ---
 if __name__ == '__main__':
-    # En producción, usa un servidor WSGI (gunicorn, uWSGI). Aquí para desarrollo.
     app.run(host='0.0.0.0', port=5005, debug=True)
-
