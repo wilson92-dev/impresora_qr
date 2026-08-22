@@ -11,7 +11,7 @@ from werkzeug.utils import secure_filename
 app = Flask(__name__)
 app.secret_key = "clave_secreta_impresiones"
 
-# --- CONFIGURACIÓN BASE DE DATOS ---
+# --- CONFIGURACIÓN BASE DE DATOS wilson uu1 ---
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///impresiones.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
