@@ -10,6 +10,14 @@
               window.history.replaceState(null, null, window.location.href);
             }
     </script>
+    <script>
+    // Empuja un estado falso al historial para capturar el botón atrás de Android
+     history.pushState(null, null, location.href);
+     window.addEventListener('popstate', function () {
+        // Si presionan atrás, los mandamos de golpe al inicio limpio
+        window.location.replace('/');
+      });
+     </script>
 </head>
 <body>
     <div class="container">

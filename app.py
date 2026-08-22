@@ -102,6 +102,7 @@ def worker_impresion():
                     cmd.extend(["-o", "ColorModel=Gray"])
                 else:
                     cmd.extend(["-o", "ColorModel=RGB"])
+                cmd.append(filepath)
 
                 try:
                     with impresora_lock:
@@ -218,6 +219,11 @@ def espera_caja(pedido_id):
     if pedido.estado in ['aprobado_caja', 'en_cola', 'completado']:
         return redirect(url_for('exito', pedido_id=pedido.id))
     return render_template('espera_caja.html', pedido=pedido)
+    # Cabeceras anti-caché estrictas para móviles (Android/iOS)
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
 
 @app.route('/exito/<pedido_id>')
 def exito(pedido_id):
@@ -234,7 +240,7 @@ def admin():
 def aprobar_pedido(pedido_id):
     pedido = Pedido.query.get_or_404(pedido_id)
     if pedido.estado == 'esperando_aprobacion':
-        pedido.estado = 'aprobado_caja'
+        pedido.estado = 'aprobado'
         db.session.commit()
         
         # Enviar de forma segura a la cola de impresión de la Raspberry Pi una sola vez

@@ -7,6 +7,13 @@
     <meta http-equiv="refresh" content="3">
     <title>Esperando Aprobación - Movitek</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script>
+    // Sobrescribe el historial para que la página actual reemplace a la anterior
+       if (window.history && window.history.replaceState) {
+           window.history.replaceState(null, null, window.location.href);
+       }
+    </script>
+
 </head>
 <body>
     <div class="container">
@@ -25,5 +32,13 @@
             }
         });
     </script>
+    <script>
+    // Empuja un estado falso al historial para capturar el botón atrás de Android
+        history.pushState(null, null, location.href);
+        window.addEventListener('popstate', function () {
+        // Si presionan atrás, los mandamos de golpe al inicio limpio
+        window.location.replace('/');
+        });
+     </script>
 </body>
 </html>
