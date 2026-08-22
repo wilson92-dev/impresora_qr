@@ -98,10 +98,10 @@ def worker_impresion():
                     "-o", f"media={TAMANO_PAPEL}"
                 ]
 
-                if pedido.modo == "bn":
+                if pedido.modo == "gris":
                     cmd.extend(["-o", "ColorModel=Gray"])
-
-                cmd.append(filepath)
+                else:
+                    cmd.extend(["-o", "ColorModel=RGB"])
 
                 try:
                     with impresora_lock:
@@ -146,7 +146,7 @@ def upload_file():
         return redirect(url_for('index'))
 
     if file and allowed_file(file.filename):
-        modo = request.form.get('modo', 'bn')
+        modo = request.form.get('modo', 'gris')
         try:
             copias = int(request.form.get('copias', 1))
             if copias < 1:
@@ -166,7 +166,7 @@ def upload_file():
             return redirect(url_for('index'))
 
         paginas = contar_paginas(filepath)
-        precio_unitario = PRECIO_HOJA_BN if modo == 'bn' else PRECIO_HOJA_COLOR
+        precio_unitario = PRECIO_HOJA_GRAFICO if modo == 'gris' else PRECIO_HOJA_COLOR
         total = paginas * copias * precio_unitario
 
         nuevo_pedido = Pedido(
